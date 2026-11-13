@@ -339,7 +339,7 @@ def slide_daeun(s, c, idx):
 
 def slide_closing(s, c, idx):
     im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
-    im.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, 185)))
+    im.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, s.get('overlay', 185))))
     d = ImageDraw.Draw(im)
     d.text((W / 2, 400), s['question'], font=F('5Medium', 46), fill=WHITE, anchor='ms')
     y = 700
