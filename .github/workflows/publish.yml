@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
     paths: ['posts/**', 'cardgen/**', 'assets/**']
-  schedule:
-    - cron: '2 0,3,10 * * *'   # 한국 09:02 / 12:02 / 19:02 정규 게시 슬롯
-    - cron: '37 * * * *'       # 매시 37분: 지연·누락분 보충 확인
   workflow_dispatch:
     inputs:
       dry_run:
@@ -55,7 +52,7 @@ jobs:
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          DRY_RUN: ${{ (inputs.dry_run || secrets.IG_ACCESS_TOKEN == '') && '1' || '0' }}
+          DRY_RUN: '1'   # 자동 게시 중단(계정 제한 이후). 재개 전까지 절대 실제 발행하지 않음
         run: python scripts/publish.py
 
       - name: 발행 기록 커밋
