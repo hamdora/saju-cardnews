@@ -5,7 +5,8 @@ on:
     branches: [main]
     paths: ['posts/**', 'cardgen/**', 'assets/**']
   schedule:
-    - cron: '7 * * * *'   # 매시 7분: 예약(publish_at) 게시물 확인
+    - cron: '2 0,3,10 * * *'   # 한국 09:02 / 12:02 / 19:02 정규 게시 슬롯
+    - cron: '37 * * * *'       # 매시 37분: 지연·누락분 보충 확인
   workflow_dispatch:
     inputs:
       dry_run:

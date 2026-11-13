@@ -286,7 +286,7 @@ def slide_daeun(s, c, idx):
     n = len(du); bw, gap = 112, 10
     x0 = (W - (bw * n + gap * (n - 1))) / 2
     hl = set(s.get('highlight', []))
-    nxt = s.get('next')
+    nxt = s.get('next', -1)
     for i, (age, gz) in enumerate(du):
         x = x0 + i * (bw + gap); y = 260
         d.text((x + bw / 2, y), f'{age}세', font=F('6SemiBold', 24),
@@ -353,7 +353,7 @@ def main(cfg_path, outdir, fmt='jpg'):
     for i, s in enumerate(cfg['slides'], 1):
         if s.get('photo') and not os.path.isabs(s['photo']):
             s = dict(s, photo=os.path.join(base, s['photo']))
-        im = fn[s['type']](s, cfg['saju'], i).convert('RGBA')
+        im = fn[s['type']](s, s.get('saju', cfg.get('saju')), i).convert('RGBA')
         if s['type'] != 'outro':
             brand_top(im)
         im = im.convert('RGB')
