@@ -11,7 +11,7 @@ HANJA_FONT = os.environ.get('HANJA_FONT', '/usr/share/fonts/opentype/noto/NotoSe
 HANJA_IDX = 1  # KR face inside the ttc (fallback-safe for hanja)
 
 W = H = 1080
-RED = (255, 92, 96)
+RED = (240, 72, 56)  # 도장 심볼과 어울리는 주홍
 WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
 ELEM = {  # 오행 색
@@ -146,7 +146,7 @@ def logo(im, x, y, center=False):
     return lg.height
 
 
-def handle(d, text='@k_styletopic'):
+def handle(d, text='@pigbosal_saju'):
     d.text((W / 2, 1059), text, font=F('3Light', 28), fill=GRAY, anchor='ms')
 
 
@@ -189,7 +189,7 @@ def slide_body(s, c, idx):
         y -= 64
         hy = y
     y_logo = (hy - 22) if s.get('heading') else (y - 20)
-    logo(im, 57, y_logo - 49)
+    logo(im, 57, y_logo - Image.open(os.path.join(ASSET, 'logo.png')).height)
     if s.get('heading'):
         draw_rich(d, 55, hy + 30, parse_rich(s['heading']), F('9Black', 44), 44, base=RED, hi=WHITE)
         y = hy + 64
