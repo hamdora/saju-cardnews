@@ -89,7 +89,7 @@ def draw_rich(d, x, y, line, font, size, base=WHITE, hi=RED, tracking=0, anchor=
 
 
 # ---------- backgrounds ----------
-def hanja_bg(chars, seed=0, glow=RED, photo=None, crop=None, fit=None):
+def hanja_bg(chars, seed=0, glow=RED, photo=None, crop=None, fit=None, offset_y=0):
     if photo and os.path.exists(photo) and fit == 'top':
         # 가로 사진을 자르지 않고 위쪽에 통째로 배치, 아래는 검정으로 페이드
         ph = Image.open(photo).convert('RGB')
@@ -110,7 +110,10 @@ def hanja_bg(chars, seed=0, glow=RED, photo=None, crop=None, fit=None):
         s = max(W / im.width, H / im.height)
         im = im.resize((int(im.width * s) + 1, int(im.height * s) + 1))
         l, t = (im.width - W) // 2, max(0, (im.height - H) // 3)
-        return im.crop((l, t, l + W, t + H)).convert('RGBA')
+        out = im.crop((l, t, l + W, t + H)).convert('RGBA')
+        if offset_y:  # 사진을 아래로 밀어 상단 브랜드 로고와 겹치지 않게
+            bg = Image.new('RGBA', (W, H), (0, 0, 0, 255)); bg.alpha_composite(out, (0, offset_y)); out = bg
+        return out
     rnd = random.Random(seed)
     bg = Image.new('RGBA', (W, H), (12, 12, 12, 255))
     # 붉은 은은한 광원
@@ -177,7 +180,7 @@ def handle(d, text='@pigbosal_saju'):
 
 # ---------- slide types ----------
 def slide_cover(s, c):
-    im = hanja_bg(s.get('bg_hanja', ''), 1, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
+    im = hanja_bg(s.get('bg_hanja', ''), 1, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'), offset_y=s.get('offset_y', 0))
     g0, g1 = s.get('grad', [330, 680])
     bottom_gradient(im, g0, g1, base_dark=s.get('dark', 40))
     d = ImageDraw.Draw(im)
@@ -197,7 +200,7 @@ def slide_cover(s, c):
 
 
 def slide_body(s, c, idx):
-    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
+    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'), offset_y=s.get('offset_y', 0))
     g0, g1 = s.get('grad', [200, 520])
     bottom_gradient(im, g0, g1, base_dark=s.get('dark', 60))
     d = ImageDraw.Draw(im)
@@ -338,7 +341,7 @@ def slide_daeun(s, c, idx):
 
 
 def slide_closing(s, c, idx):
-    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
+    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'), offset_y=s.get('offset_y', 0))
     im.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, s.get('overlay', 185))))
     d = ImageDraw.Draw(im)
     d.text((W / 2, 400), s['question'], font=F('5Medium', 46), fill=WHITE, anchor='ms')
@@ -367,6 +370,11 @@ def main(cfg_path, outdir, fmt='jpg'):
         if s.get('photo') and not os.path.isabs(s['photo']):
             s = dict(s, photo=os.path.join(base, s['photo']))
         im = fn[s['type']](s, s.get('saju', cfg.get('saju')), i).convert('RGBA')
+        if s.get('sticker'):  # 투명 PNG(로고 등)를 배경 위에 얹기
+            st = s['sticker']; sp = st['path'] if os.path.isabs(st['path']) else os.path.join(base, st['path'])
+            lg = Image.open(sp).convert('RGBA'); w = st.get('width', 560)
+            lg = lg.resize((w, round(lg.height * w / lg.width)), Image.LANCZOS)
+            im.alpha_composite(lg, ((W - w) // 2, st.get('y', 150)))
         if s['type'] != 'outro':
             brand_top(im)
         im = im.convert('RGB')
