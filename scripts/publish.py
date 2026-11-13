@@ -14,7 +14,13 @@ import glob, json, os, sys, time
 import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HOST = os.environ.get('IG_API_HOST', 'https://graph.instagram.com')
+def _default_host():
+    # Instagram 로그인 토큰(IG...)은 graph.instagram.com, 시스템 사용자/Facebook 토큰(EAA...)은 graph.facebook.com
+    tok = os.environ.get('IG_ACCESS_TOKEN', '')
+    return 'https://graph.instagram.com' if tok.startswith('IG') else 'https://graph.facebook.com'
+
+
+HOST = os.environ.get('IG_API_HOST') or _default_host()
 VER = os.environ.get('IG_API_VERSION', 'v26.0')
 DRY = os.environ.get('DRY_RUN') == '1'
 KST = dt.timezone(dt.timedelta(hours=9))

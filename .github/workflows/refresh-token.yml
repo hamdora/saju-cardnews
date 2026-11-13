@@ -16,6 +16,9 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          if [[ "${TOKEN}" != IG* ]]; then
+            echo "시스템 사용자 토큰(만료 없음)이라 갱신이 필요 없습니다."; exit 0
+          fi
           resp=$(curl -fsS "https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${TOKEN}")
           new=$(echo "$resp" | jq -r '.access_token')
           days=$(( $(echo "$resp" | jq -r '.expires_in') / 86400 ))
