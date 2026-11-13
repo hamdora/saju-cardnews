@@ -146,6 +146,18 @@ def logo(im, x, y, center=False):
     return lg.height
 
 
+def brand_top(im, h=44, y=30):
+    """모든 카드 공통: 상단 중앙 고정 로고 (본문 레이아웃과 분리)"""
+    shade = Image.new('L', (1, 150))
+    for i in range(150):
+        shade.putpixel((0, i), int(150 * (1 - i / 150) ** 1.6))
+    top = Image.new('RGBA', (W, 150), (0, 0, 0, 255)); top.putalpha(shade.resize((W, 150)))
+    im.alpha_composite(top, (0, 0))
+    lg = Image.open(os.path.join(ASSET, 'logo.png')).convert('RGBA')
+    lg = lg.resize((round(lg.width * h / lg.height), h), Image.LANCZOS)
+    im.alpha_composite(lg, ((W - lg.width) // 2, y))
+
+
 def handle(d, text='@pigbosal_saju'):
     d.text((W / 2, 1059), text, font=F('3Light', 28), fill=GRAY, anchor='ms')
 
@@ -161,7 +173,7 @@ def slide_cover(s, c):
     y_end = 960
     lh = 92
     y = y_end - lh * (len(lines) - 1)
-    logo(im, 57, y - lh - 40)
+    pass  # 로고는 brand_top()에서 상단 중앙 고정
     for ln in lines:
         draw_rich(d, 55, y, parse_rich(ln), f, 74, base=WHITE, hi=RED)
         y += lh
@@ -189,7 +201,7 @@ def slide_body(s, c, idx):
         y -= 64
         hy = y
     y_logo = (hy - 22) if s.get('heading') else (y - 20)
-    logo(im, 57, y_logo - Image.open(os.path.join(ASSET, 'logo.png')).height)
+    pass  # 로고는 brand_top()에서 상단 중앙 고정
     if s.get('heading'):
         draw_rich(d, 55, hy + 30, parse_rich(s['heading']), F('9Black', 44), 44, base=RED, hi=WHITE)
         y = hy + 64
@@ -217,7 +229,7 @@ def pillar_box(im, d, x, y, sz, ch, el):
 def slide_chart(s, c, idx):
     im = Image.new('RGBA', (W, H), (12, 12, 12, 255))
     d = ImageDraw.Draw(im)
-    logo(im, 57, 52)
+    pass  # 로고는 brand_top()에서 상단 중앙 고정
     d.text((57, 170), s['title'], font=F('9Black', 52), fill=WHITE, anchor='ls')
     d.text((57, 218), s['sub'], font=F('4Regular', 27), fill=GRAY, anchor='ls')
     cols = ['시주', '일주', '월주', '년주']
@@ -268,7 +280,7 @@ def slide_chart(s, c, idx):
 def slide_daeun(s, c, idx):
     im = Image.new('RGBA', (W, H), (12, 12, 12, 255))
     d = ImageDraw.Draw(im)
-    logo(im, 57, 52)
+    pass  # 로고는 brand_top()에서 상단 중앙 고정
     draw_rich(d, 55, 170, parse_rich(s['heading']), F('9Black', 50), 50, base=RED, hi=WHITE)
     du = c['daeun']  # [[age, '癸丑'], ...]
     n = len(du); bw, gap = 112, 10
@@ -320,7 +332,7 @@ def slide_closing(s, c, idx):
     y = 700
     for ln in s['answer']:
         d.text((W / 2, y), ln, font=F('7Bold', 40), fill=RED, anchor='ms'); y += 60
-    logo(im, 0, y + 20, center=True)
+    pass  # 로고는 brand_top()에서 상단 중앙 고정
     if s.get('disclaimer'):
         d.text((W / 2, 1000), s['disclaimer'], font=F('3Light', 22), fill=(130, 130, 130), anchor='ms')
     handle(d)
@@ -341,7 +353,10 @@ def main(cfg_path, outdir, fmt='jpg'):
     for i, s in enumerate(cfg['slides'], 1):
         if s.get('photo') and not os.path.isabs(s['photo']):
             s = dict(s, photo=os.path.join(base, s['photo']))
-        im = fn[s['type']](s, cfg['saju'], i).convert('RGB')
+        im = fn[s['type']](s, cfg['saju'], i).convert('RGBA')
+        if s['type'] != 'outro':
+            brand_top(im)
+        im = im.convert('RGB')
         p = os.path.join(outdir, f"{i:02d}.{fmt}")
         if fmt == 'jpg':
             im.save(p, 'JPEG', quality=92, optimize=True)  # 인스타 API는 JPEG만 허용
