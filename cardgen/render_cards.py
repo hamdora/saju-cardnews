@@ -89,7 +89,20 @@ def draw_rich(d, x, y, line, font, size, base=WHITE, hi=RED, tracking=0, anchor=
 
 
 # ---------- backgrounds ----------
-def hanja_bg(chars, seed=0, glow=RED, photo=None, crop=None):
+def hanja_bg(chars, seed=0, glow=RED, photo=None, crop=None, fit=None):
+    if photo and os.path.exists(photo) and fit == 'top':
+        # 가로 사진을 자르지 않고 위쪽에 통째로 배치, 아래는 검정으로 페이드
+        ph = Image.open(photo).convert('RGB')
+        if crop:
+            ph = ph.crop(tuple(crop))
+        ph = ph.resize((W, round(ph.height * W / ph.width)), Image.LANCZOS)
+        bg = Image.new('RGBA', (W, H), (0, 0, 0, 255))
+        fade = Image.new('L', (1, ph.height))
+        for y in range(ph.height):
+            fade.putpixel((0, y), 255 if y < ph.height * 0.7 else int(255 * (1 - (y - ph.height * 0.7) / (ph.height * 0.3))))
+        ph = ph.convert('RGBA'); ph.putalpha(fade.resize((W, ph.height)))
+        bg.alpha_composite(ph, (0, 0))
+        return bg
     if photo and os.path.exists(photo):
         im = Image.open(photo).convert('RGB')
         if crop:
@@ -164,7 +177,7 @@ def handle(d, text='@pigbosal_saju'):
 
 # ---------- slide types ----------
 def slide_cover(s, c):
-    im = hanja_bg(s.get('bg_hanja', ''), 1, photo=s.get('photo'), crop=s.get('crop'))
+    im = hanja_bg(s.get('bg_hanja', ''), 1, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
     g0, g1 = s.get('grad', [330, 680])
     bottom_gradient(im, g0, g1, base_dark=s.get('dark', 40))
     d = ImageDraw.Draw(im)
@@ -184,7 +197,7 @@ def slide_cover(s, c):
 
 
 def slide_body(s, c, idx):
-    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'))
+    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
     g0, g1 = s.get('grad', [200, 520])
     bottom_gradient(im, g0, g1, base_dark=s.get('dark', 60))
     d = ImageDraw.Draw(im)
@@ -325,7 +338,7 @@ def slide_daeun(s, c, idx):
 
 
 def slide_closing(s, c, idx):
-    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'))
+    im = hanja_bg(s.get('bg_hanja', ''), idx, photo=s.get('photo'), crop=s.get('crop'), fit=s.get('fit'))
     im.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, 185)))
     d = ImageDraw.Draw(im)
     d.text((W / 2, 400), s['question'], font=F('5Medium', 46), fill=WHITE, anchor='ms')
