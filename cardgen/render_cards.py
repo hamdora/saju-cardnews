@@ -19,6 +19,10 @@ ELEM = {  # 오행 색
     '土': ((224, 169, 59), (20, 20, 20)), '金': ((225, 225, 225), (20, 20, 20)),
     '水': ((47, 95, 214), WHITE),
 }
+READ = dict(zip('甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥', '갑을병정무기경신임계자축인묘진사오미신유술해'))
+TG_KO = {'일간': '나', '비견': '동료', '겁재': '경쟁자', '식신': '재능', '상관': '끼·입담', '편재': '큰돈',
+         '정재': '고정 수입', '편관': '압박', '정관': '명예·법', '편인': '아이디어', '정인': '도움'}
+EL_KO = {'木': '나무', '火': '불', '土': '흙', '金': '쇠', '水': '물'}
 GAN_EL = dict(zip('甲乙丙丁戊己庚辛壬癸', '木木火火土土金金水水'))
 ZHI_EL = dict(zip('子丑寅卯辰巳午未申酉戌亥', '水土木木土火火土金金土水'))
 
@@ -238,8 +242,9 @@ def pillar_box(im, d, x, y, sz, ch, el):
         return
     bgc, fg = ELEM[el]
     d.rounded_rectangle((x, y, x + sz, y + sz), 14, fill=bgc)
-    d.text((x + sz / 2, y + sz / 2 + 4), ch, font=HJ(int(sz * 0.62)), fill=fg, anchor='mm')
-    d.text((x + sz - 12, y + sz - 10), el, font=HJ(22), fill=fg + (200,) if len(fg) == 3 else fg, anchor='rs')
+    d.text((x + sz / 2, y + sz / 2 - 6), ch, font=HJ(int(sz * 0.52)), fill=fg, anchor='mm')
+    # 한글 읽기 + 오행 이름 (한자 모르는 사람도 바로 읽히게)
+    d.text((x + sz / 2, y + sz - 14), f"{READ.get(ch, '')} · {EL_KO.get(el, '')}", font=F('7Bold', 24), fill=fg, anchor='ms')
 
 
 def slide_chart(s, c, idx):
@@ -261,6 +266,7 @@ def slide_chart(s, c, idx):
         pillar_box(im, d, x, y_g, sz, g, GAN_EL.get(g))
         pillar_box(im, d, x, y_z, sz, z, ZHI_EL.get(z))
         tg, tz = c['tengods'][i]
+        tg, tz = TG_KO.get(tg, tg), TG_KO.get(tz, tz)
         d.text((x + sz / 2, y_g - 0 - 8 + 0), '', font=F('4Regular', 1))
         d.text((x + sz / 2, y_z + sz + 36), tz, font=F('5Medium', 26), fill=GRAY, anchor='ms')
         # 천간 십신은 박스 위 머리글 아래 작은 라벨
@@ -285,8 +291,7 @@ def slide_chart(s, c, idx):
         n = counts.get(el, 0); bgc, fg = ELEM[el]
         d.rounded_rectangle((bx, y - 30, bx + 140, y + 10), 10, fill=bgc if n else (40, 40, 40))
         col = fg if n else (120, 120, 120)
-        d.text((bx + 52, y - 10), el, font=HJ(28), fill=col, anchor='mm')
-        d.text((bx + 92, y - 10), str(n), font=F('9Black', 28), fill=col, anchor='mm')
+        d.text((bx + 70, y - 10), f"{EL_KO[el]} {n}", font=F('7Bold', 26), fill=col, anchor='mm')
         bx += 160
     d.text((57, 940), s['note'], font=F('4Regular', 27), fill=GRAY, anchor='ls')
     handle(d)
