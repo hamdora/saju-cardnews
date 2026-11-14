@@ -360,6 +360,33 @@ def slide_closing(s, c, idx):
     return im
 
 
+def slide_score(s, c, idx):
+    """사주 성적표: 항목별 5칸 막대 + 한 줄 근거 + 최종 판정"""
+    im = Image.new('RGBA', (W, H), (12, 12, 12, 255))
+    d = ImageDraw.Draw(im)
+    d.text((57, 160), s['title'], font=F('9Black', 52), fill=WHITE, anchor='ls')
+    if s.get('sub'):
+        d.text((57, 206), s['sub'], font=F('4Regular', 27), fill=GRAY, anchor='ls')
+    y = 270
+    total = 0
+    for it in s['items']:
+        sc = it['score']; total += sc
+        d.rounded_rectangle((44, y - 8, W - 44, y + 112), 18, fill=(26, 26, 26))
+        d.text((70, y + 40), it['label'], font=F('9Black', 38), fill=WHITE, anchor='ls')
+        for k in range(5):  # 5칸 막대
+            x0 = 300 + k * 74
+            d.rounded_rectangle((x0, y + 12, x0 + 64, y + 42), 8, fill=RED if k < sc else (60, 60, 60))
+        d.text((W - 70, y + 40), f"{sc}/5", font=F('9Black', 36), fill=RED if sc >= 4 else (GRAY if sc == 3 else (150, 150, 150)), anchor='rs')
+        d.text((70, y + 90), it['why'], font=F('5Medium', 27), fill=GRAY, anchor='ls')
+        y += 132
+    n = len(s['items'])
+    d.rounded_rectangle((44, y + 4, W - 44, y + 96), 18, fill=RED)
+    d.text((W / 2, y + 64), s['verdict'].replace('{total}', str(total)).replace('{max}', str(n * 5)),
+           font=F('9Black', 38), fill=WHITE, anchor='ms')
+    handle(d)
+    return im
+
+
 def slide_outro(s, c, idx):
     return Image.open(os.path.join(ASSET, 'outro.png')).convert('RGBA')
 
@@ -369,7 +396,7 @@ def main(cfg_path, outdir, fmt='jpg'):
     base = os.path.dirname(os.path.abspath(cfg_path))
     os.makedirs(outdir, exist_ok=True)
     fn = {'cover': lambda s, c, i: slide_cover(s, c), 'body': slide_body, 'chart': slide_chart,
-          'daeun': slide_daeun, 'closing': slide_closing, 'outro': slide_outro}
+          'daeun': slide_daeun, 'score': slide_score, 'closing': slide_closing, 'outro': slide_outro}
     paths = []
     for i, s in enumerate(cfg['slides'], 1):
         if s.get('photo') and not os.path.isabs(s['photo']):
